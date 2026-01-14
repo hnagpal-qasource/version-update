@@ -28,7 +28,7 @@ jobs:
 
       - name: Check and bump version
         run: |
-          VERSION_FILE="version/version.rb"
+          VERSION_FILE=version/version.rb"
           
           # Get main branch version
           git fetch origin main
