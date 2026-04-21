@@ -1,0 +1,68 @@
+
+name: Test
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  pull_request:
+    types: [closed]
+    branches:
+      - 2.23.0
+
+permissions:
+  contents: write
+
+jobs:
+  merge:
+    if: github.event_name == 'schedule' || github.event.pull_request.merged == true
+    runs-on: ""
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch all branches
+        run: git fetch --all --prune
+
+      - name: Merge 2.23.0 into target branches
+        env:
+          SOURCE_BRANCH: 2.23.0
+          TARGET_BRANCHES: "2.24.0 2.25.0"
+        run: |
+          set +e
+          failed_branches=""
+
+          for branch in $TARGET_BRANCHES; do
+            echo "Processing $branch"
+
+            if ! git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+              echo "Branch origin/$branch does not exist, skipping"
+              continue
+            fi
+
+            git checkout -B "$branch" "origin/$branch"
+
+            if git merge "origin/$SOURCE_BRANCH" --no-ff -m "Auto merge $SOURCE_BRANCH into $branch"; then
+              git push origin "$branch"
+              echo "Merge successful or already up to date: $branch"
+            else
+              echo "Merge conflict in $branch"
+              git merge --abort || true
+              failed_branches="${failed_branches:+$failed_branches }$branch"
+              continue
+            fi
+          done
+
+          if [ -n "$failed_branches" ]; then
+            echo "Merge failed for: $failed_branches"
+            exit 1
+          fi
+
+          echo "All target branches processed successfully"
