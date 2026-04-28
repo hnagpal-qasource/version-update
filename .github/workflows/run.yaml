@@ -7,7 +7,7 @@ on:
   pull_request:
     types: [closed]
     branches:
-      - 2.23.0
+      - 2.23.5
 
 permissions:
   contents: write
@@ -19,10 +19,10 @@ concurrency:
 jobs:
   merge:
     if: github.event_name == 'schedule' || github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
+    runs-on: "ubuntu-latest"
     env:
-      SOURCE_BRANCH: 2.23.0
-      TARGET_BRANCHES: "2.24.0 2.25.0"
+      SOURCE_BRANCH: 2.23.5
+      TARGET_BRANCHES: "2.24.5 2.25.5"
 
     steps:
       - name: Checkout repository
@@ -130,5 +130,4 @@ jobs:
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
-
 
