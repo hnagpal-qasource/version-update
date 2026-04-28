@@ -12,6 +12,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: qa-auto-merge
+  cancel-in-progress: false
+
 jobs:
   merge:
     if: github.event_name == 'schedule' || github.event.pull_request.merged == true
@@ -80,5 +84,51 @@ jobs:
             echo "status=failure" >> $GITHUB_OUTPUT
             exit 1
           fi
+
+      - name: Generate Workflow Summary
+        if: always()
+        run: |
+          echo "## 🔄 QA Auto Merge Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Source Branch:** \`$SOURCE_BRANCH\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          SUCCESS_BRANCHES="${{ steps.merge_step.outputs.success_branches }}"
+          FAILED_BRANCHES="${{ steps.merge_step.outputs.failed_branches }}"
+          STATUS="${{ steps.merge_step.outputs.status }}"
+          
+          # Create results table
+          echo "| Target Branch | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Add successful branches
+          if [ -n "$SUCCESS_BRANCHES" ]; then
+            IFS=', ' read -ra BRANCHES <<< "$SUCCESS_BRANCHES"
+            for branch in "${BRANCHES[@]}"; do
+              echo "| \`$branch\` | ✅ Success |" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          # Add failed branches
+          if [ -n "$FAILED_BRANCHES" ]; then
+            IFS=', ' read -ra BRANCHES <<< "$FAILED_BRANCHES"
+            for branch in "${BRANCHES[@]}"; do
+              echo "| \`$branch\` | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          
+          # Overall status
+          if [ "$STATUS" = "success" ]; then
+            echo "### ✅ All merges completed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [ "$STATUS" = "partial" ]; then
+            echo "### ⚠️ Partial success - some merges failed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ All merges failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
 
 
