@@ -13,7 +13,7 @@ jobs:
     runs-on: "ubuntu-latest"
     env:
       SOURCE_BRANCH: 2.23.5
-      TARGET_BRANCHES: "2.24.5 2.25.5"
+      TARGET_BRANCHES: "2.24.0 2.25.0"
 
     steps:
       - name: Checkout repository
