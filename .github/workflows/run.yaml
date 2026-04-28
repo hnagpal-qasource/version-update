@@ -12,7 +12,7 @@ jobs:
   merge:
     runs-on: "ubuntu-latest"
     env:
-      SOURCE_BRANCH: 2.23.5
+      SOURCE_BRANCH: 2.23.0
       TARGET_BRANCHES: "2.24.0 2.25.0"
 
     steps:
