@@ -3,26 +3,17 @@ name: QA Auto Merge
 
 on:
   schedule:
-    - cron: '30 16 * * *'
-  pull_request:
-    types: [closed]
-    branches:
-      - 2.23.0
+    - cron: '*/2 * * * *'
 
 permissions:
   contents: write
 
-concurrency:
-  group: qa-auto-merge
-  cancel-in-progress: false
-
 jobs:
   merge:
-    if: github.event_name == 'schedule' || github.event.pull_request.merged == true
     runs-on: "ubuntu-latest"
     env:
-      SOURCE_BRANCH: 2.23.0
-      TARGET_BRANCHES: "2.24.0 2.25.0"
+      SOURCE_BRANCH: 2.23.5
+      TARGET_BRANCHES: "2.24.5 2.25.5"
 
     steps:
       - name: Checkout repository
@@ -56,7 +47,7 @@ jobs:
 
             git checkout -B "$branch" "origin/$branch"
 
-            if git merge "origin/$SOURCE_BRANCH" --no-ff -m "Auto merge $SOURCE_BRANCH into $branch"; then
+            if git merge "origin/$SOURCE_BRANCH" --no-ff -m "PPS-0000 Auto merge $SOURCE_BRANCH into $branch"; then
               if git push origin "$branch"; then
                 echo "Merge successful: $branch"
                 success_branches="${success_branches:+$success_branches, }$branch"
@@ -130,4 +121,3 @@ jobs:
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
-
