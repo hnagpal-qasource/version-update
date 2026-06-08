@@ -1,0 +1,32 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: workflow
+name: My workflow
+on:
+  workflow_dispatch:
+metadata:
+  stages/v1alpha1:
+    - name: Stage 1
+      jobs:
+        - job1
+        - test
+jobs:
+  job1:
+    steps:
+      - run: echo "hello world"
+        uses: docker://golang:1.20.3-alpine3.17
+        name: Hello world
+        shell: sh
+  test:
+    needs:
+      - job1
+    environment: dev
+    steps:
+      - name: testing
+        kind: build
+        uses: cloudbees-io/jenkins-run-job@v2
+        with:
+          url: http://10.10.5.170:9080/
+          username: copper
+          token: copper
+          job-name: test
+          parameters: node:20-alpine
